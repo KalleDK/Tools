@@ -1,5 +1,23 @@
 #!/usr/bin/env perl
 
+
+
+#
+# Example INI file
+#
+# [PLAY]
+# SUBNET=172.20.20.0
+# IP=172.20.20.10
+# MAC=ff:ff:2f:af:7f:3d
+# PORT=3389
+#
+# [PLEX]
+# SUBNET=172.20.20.0
+# IP=172.20.20.20
+# MAC=0f:f3:f4:3f:fb:fd
+# PORT=3389
+
+
 use strict;
 use warnings;
 use Data::Dumper;
