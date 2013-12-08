@@ -29,20 +29,73 @@ sub isAlive {
 
 	$result = check_ports($machine->{IP}, 100, \%check);
 
-	if ($result->{tcp}->{$port}->{open}) { print "Alive\n";} else {print "Dead\n";}
+	if ($result->{tcp}->{$port}->{open}) { print "ON\n";} else {print "OFF\n";}
+}
+
+sub listStatus {
+	my ($cfg) = @_;
+	my $line;
+	my $machine;
+	my @cfg_lines = $cfg->vars();
+	foreach my $line (@cfg_lines) {
+		if ($line =~ /(.*)\.IP$/ ) {
+			print $1 . ": ";
+			$machine = $cfg->param(-block=>$1);
+			isAlive($machine);
+		}
+	}
+}
+
+sub showHostfile {
+	my ($cfg) = @_;
+	my $line;
+	my $ip;
+	my $hostname;
+	my @cfg_lines = $cfg->vars();
+	foreach my $line (@cfg_lines) {
+		if ($line =~ /(.*)\.MAC$/ ) {
+			$hostname = lc $1;
+			$ip = $cfg->param($1.".IP");
+			print $ip . "\t\t" . $hostname . "\n";
+		}
+	}
+	
+}
+
+sub showDHCP {
+	my ($cfg) = @_;
+	my $line;
+	my $ip;
+	my $mac;
+	my @cfg_lines = $cfg->vars();
+	foreach my $line (@cfg_lines) {
+		if ($line =~ /(.*)\.MAC$/ ) {
+			$ip = $cfg->param($1.".IP");
+			$mac = $cfg->param($1.".MAC");
+			print "set system services dhcp static-binding $mac fixed-address $ip\n";
+		}
+	}
+
+
 }
 
 my $wake;
 my $status;
+my $dhcp;
+my $list;
 my $machine;
 my $machine_name;
+my $hostfile;
 my $cfg;
 my $config_file = $ENV{"HOME"} . "/computers.cfg";
 
 GetOptions(	'wake=s{1}' => sub { my ($opt_name, $opt_value) = @_; $wake = 1; $machine_name = uc $opt_value; },
-		'status=s{1}' => sub { my ($opt_name, $opt_value) = @_; $status = 1; $machine_name = uc $opt_value; } );
+		'status=s{1}' => sub { my ($opt_name, $opt_value) = @_; $status = 1; $machine_name = uc $opt_value; },
+		'hostfile' => \$hostfile,
+		'list' => \$list,
+		'dhcp' => \$dhcp );
 
-if (!defined $wake && !defined $status) { die "Missing -wake or -status"; }
+if (!defined $list && !defined $dhcp && !defined $wake && !defined $status && !defined $hostfile) { die "Missing -wake or -status"; }
 
 if (! -e $config_file ) {
 	die "Config file doesn't exists: $config_file";
@@ -50,15 +103,27 @@ if (! -e $config_file ) {
 
 $cfg = new Config::Simple($config_file);
 
-$machine = $cfg->param(-block=>$machine_name);
-
-if (!%$machine) { die "Machine doesn't exists: $machine_name\n"; }
 
 if ($wake) {
+	$machine = $cfg->param(-block=>$machine_name);
+	if (!%$machine) { die "Machine doesn't exists: $machine_name\n"; }
 	send_wol($machine);
 };
 
 if ($status) {
+	$machine = $cfg->param(-block=>$machine_name);
+	if (!%$machine) { die "Machine doesn't exists: $machine_name\n"; }
 	isAlive($machine);
 }
 
+if ($hostfile) {
+	showHostfile($cfg);
+}
+
+if ($dhcp) {
+	showDHCP($cfg);
+}
+
+if ($list) {
+	listStatus($cfg);
+}
