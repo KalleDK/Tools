@@ -93,7 +93,7 @@ sub listStatus {
 sub showHostfile {
 	my ($cfg, $devices) = @_;
 	foreach (@$devices) {
-		print $_->{IP} . "\t\t" . $_->{HOSTNAME} . "\n";
+		print $_->{IP} . "\t\t" . $_->{NAME} . "\n";
 	}
 }
 
