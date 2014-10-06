@@ -24,3 +24,8 @@ install:
 deinstall:
 	@echo "Removing $(DESTDIR)$(INSTALL_PREFIX)/$(BIN_NAME)"
 	@$(RM) -rf $(DESTDIR)$(INSTALL_PREFIX)/magnet
+
+.PHONY config
+config:
+	@echo "Installing rtorrent.rc"
+	sed -e s/\\\$DATA_PATH\\\$/GG/g rtorrent/.rtorrent.rc.source	
